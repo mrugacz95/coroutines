@@ -1,3 +1,12 @@
 <resources>
     <string name="app_name">Coruitnes</string>
+    <string name="threads">Threads</string>
+    <string name="on_mainthread">on MainThread</string>
+    <string name="retrofit">Retrofit</string>
+    <string name="callbacks">Callbacks</string>
+    <string name="asynctask">AsyncTask</string>
+    <string name="future">Future</string>
+    <string name="promise">Promise</string>
+    <string name="clear">Clear</string>
+    <string name="details">%s, %s, %s</string>
 </resources>
