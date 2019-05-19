@@ -1,7 +1,11 @@
 package pl.put.poznan.panum.coruitnes
 
+import com.jakewharton.retrofit2.adapter.kotlin.coroutines.CoroutineCallAdapterFactory
+import io.reactivex.Observable
+import kotlinx.coroutines.Deferred
 import retrofit2.Call
 import retrofit2.Retrofit
+import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.GET
 import retrofit2.http.Path
@@ -15,6 +19,8 @@ interface GitHubApiService {
                 .addConverterFactory(
                     GsonConverterFactory.create()
                 )
+                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+                .addCallAdapterFactory(CoroutineCallAdapterFactory())
                 .baseUrl("https://api.github.com/")
                 .build()
 
@@ -23,11 +29,29 @@ interface GitHubApiService {
     }
 
     @GET("users/{user}/repos")
-    fun listRepos(@Path("user") user: String): Call<List<Repo>>
+    fun getRepos(@Path("user") user: String): Call<List<Repo>>
 
-    @GET("{user}/{repo}")
-    fun listRepos(
+    @GET("repos/{user}/{repo}")
+    fun getDetails(
         @Path("user") user: String,
         @Path("repo") repo: String
-    ): Call<List<Repo>>
+    ): Call<Repo>
+
+    @GET("users/{user}/repos")
+    fun getReposRx(@Path("user") user: String): Observable<List<Repo>>
+
+    @GET("repos/{user}/{repo}")
+    fun getDetailsRx(
+        @Path("user") user: String,
+        @Path("repo") repo: String
+    ): Observable<Repo>
+
+    @GET("users/{user}/repos")
+    suspend fun getReposWithCoroutines(@Path("user") user: String): Deferred<List<Repo>>
+
+    @GET("repos/{user}/{repo}")
+    fun getDetailsWithCoroutines(
+        @Path("user") user: String,
+        @Path("repo") repo: String
+    ): Deferred<Repo>
 }

@@ -101,9 +101,12 @@ class MainActivity : AppCompatActivity() {
                 .subscribeOn(Schedulers.io())
             repositories
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe { repos ->
-                    displayRepos(repos)
-                }
+                .subscribe(
+                    { repos ->
+                        displayRepos(repos)
+                    },
+                    { e -> Toast.makeText(this@MainActivity, e.message, Toast.LENGTH_LONG).show() }
+                )
             repositories
                 .map { repos ->
                     val repoName = repos[0].name
@@ -132,7 +135,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun retrofitRequest() {
-        gitHubApiServe.listRepos(user).enqueue(object : Callback<List<Repo>> {
+        gitHubApiServe.getRepos(user).enqueue(object : Callback<List<Repo>> {
             override fun onFailure(call: Call<List<Repo>>, t: Throwable) {
                 tv_repos.text = t.message
             }

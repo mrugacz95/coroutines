@@ -8,6 +8,8 @@ import java.lang.reflect.Type
 import java.net.HttpURLConnection
 import java.net.URL
 
+const val BASE_URL = "https://api.github.com"
+
 fun <T> httpRequest(url: String, type: Type): T? {
     val requestUrl = URL(url)
     val conn = requestUrl.openConnection() as HttpURLConnection
@@ -21,14 +23,14 @@ fun <T> httpRequest(url: String, type: Type): T? {
 
 fun requestRepos(user: String): List<Repo>? {
     return httpRequest<List<Repo>>(
-        "https://api.github.com/users/$user/repos?sort=updated&direction=desc",
+        "$BASE_URL/users/$user/repos?sort=updated&direction=desc",
         object : TypeToken<List<Repo>>() {}.type
     )
 }
 
 fun requestDetails(user: String, repo: String): Repo? {
     return httpRequest<Repo>(
-        "https://api.github.com/repos/$user/$repo",
+        "$BASE_URL/repos/$user/$repo",
         Repo::class.java
     )
 }
