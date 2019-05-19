@@ -7,19 +7,18 @@ import androidx.appcompat.app.AppCompatActivity
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
-import java9.util.function.Consumer
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.*
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import java.lang.Runnable
+import java.util.function.Consumer
 
 class MainActivity : AppCompatActivity() {
 
     val user = "mrugacz95"
     private val job = Job()
-    private val uiScope = CoroutineScope(Dispatchers.Main + job)
     private val ioScope = CoroutineScope(Dispatchers.IO + job)
     private val gitHubApiServce by lazy {
         GitHubApiService.create()
@@ -79,16 +78,13 @@ class MainActivity : AppCompatActivity() {
         }
         bt_promise.setOnClickListener {
             val repositories = promiseRequestRepos(user)
-                .exceptionallyAsync {
-                    null
-                }
             repositories
                 .thenAcceptAsync(
                     Consumer { t -> displayRepos(t) },
                     mainThreadExecutor
                 )
             repositories
-                .thenApply { repos ->
+                .thenApplyAsync { repos ->
                     repos?.get(0)?.name ?: throw NullPointerException()
                 }
                 .thenApply { repoName -> promiseRequestDetails(user, repoName) }
@@ -128,12 +124,12 @@ class MainActivity : AppCompatActivity() {
         bt_coroutines.setOnClickListener {
             ioScope.launch {
                 val repos = requestRepos(user)
-                uiScope.launch {
+                MainScope().launch {
                     displayRepos(repos)
                 }
                 val repoName = repos?.get(0)?.name ?: return@launch
                 val details = requestDetails(user, repoName)
-                uiScope.launch {
+                MainScope().launch {
                     displayDetails(details)
                 }
             }
@@ -165,17 +161,66 @@ class MainActivity : AppCompatActivity() {
                             displayDetails(response.body())
                         }
 
-                    });
+                    })
 
                 }
 
             })
         }
+        bt_retrofit_futures.setOnClickListener {
+
+            val repositories = gitHubApiServce
+                .getReposWithCompletableFuture(user)
+            repositories
+                .thenAcceptAsync(
+                    Consumer { repos -> displayRepos(repos) }, mainThreadExecutor
+                )
+            repositories
+                .thenApplyAsync { repos ->
+                    repos?.get(0)?.name ?: throw NullPointerException()
+                }
+                .thenApply { repoName -> promiseRequestDetails(user, repoName) }
+                .thenAcceptAsync(
+                    Consumer { repo -> displayDetails(repo?.get()) },
+                    mainThreadExecutor
+                )
+        }
+        bt_retrofit_rx.setOnClickListener {
+            val repositories = gitHubApiServce.getReposRx(user).subscribeOn(Schedulers.io())
+            repositories
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe({ repos -> displayRepos(repos) },
+                    { e -> Toast.makeText(this@MainActivity, e.message, Toast.LENGTH_LONG).show() })
+            repositories
+                .map { repos ->
+                    repos[0].name
+                }
+                .flatMap { repoName ->
+                    gitHubApiServce.getDetailsRx(user, repoName)
+                }
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(
+                    { repo -> displayDetails(repo) },
+                    { e -> Toast.makeText(this@MainActivity, e.message, Toast.LENGTH_LONG).show() })
+        }
+        bt_retrofit_coroutines.setOnClickListener {
+            ioScope.launch {
+                val repos = gitHubApiServce.getReposWithCoroutines(user).await()
+                MainScope().launch {
+                    displayRepos(repos)
+                }
+                val repoName = repos[0].name
+                val details = gitHubApiServce.getDetailsWithCoroutines(user, repoName).await()
+                MainScope().launch {
+                    displayDetails(details)
+                }
+            }
+        }
     }
 
     override fun onPause() {
         super.onPause()
-        uiScope.coroutineContext.cancelChildren()
+        MainScope().coroutineContext.cancelChildren()
         ioScope.coroutineContext.cancelChildren()
     }
 

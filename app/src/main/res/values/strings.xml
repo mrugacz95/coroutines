@@ -11,4 +11,7 @@
     <string name="details">%s, %s, %s</string>
     <string name="reactive">Reactive</string>
     <string name="coroutines">Coroutines</string>
+    <string name="retrofit_rx">Retrofit Rx</string>
+    <string name="retrofit_futures">Retrofit futures</string>
+    <string name="retrofit_coroutines">Retrofit coroutines</string>
 </resources>

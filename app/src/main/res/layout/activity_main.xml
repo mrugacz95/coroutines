@@ -15,8 +15,9 @@
     <ScrollView
         android:id="@+id/scrollView"
         android:layout_width="match_parent"
-        android:layout_height="150dp"
+        android:layout_height="100dp"
         android:padding="8dp"
+        android:scrollbars="vertical"
         app:layout_constraintTop_toTopOf="parent">
 
         <TextView
@@ -143,9 +144,46 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
         android:text="@string/retrofit"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/bt_retrofit_futures"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/bt_coroutines" />
+
+    <Button
+        android:id="@+id/bt_retrofit_futures"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:text="@string/retrofit_futures"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/bt_retrofit"
+        app:layout_constraintTop_toBottomOf="@+id/bt_coroutines" />
+
+    <Button
+        android:id="@+id/bt_retrofit_rx"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:text="@string/retrofit_rx"
+        app:layout_constraintEnd_toStartOf="@id/bt_retrofit_coroutines"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/bt_retrofit" />
+
+
+    <Button
+        android:id="@+id/bt_retrofit_coroutines"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:text="@string/retrofit_coroutines"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/bt_retrofit_rx"
+        app:layout_constraintTop_toBottomOf="@+id/bt_retrofit" />
 </androidx.constraintlayout.widget.ConstraintLayout>

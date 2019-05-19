@@ -2,7 +2,6 @@ package pl.put.poznan.panum.coruitnes
 
 import com.jakewharton.retrofit2.adapter.kotlin.coroutines.CoroutineCallAdapterFactory
 import io.reactivex.Observable
-import java9.util.concurrent.CompletableFuture
 import kotlinx.coroutines.Deferred
 import retrofit2.Call
 import retrofit2.Retrofit
@@ -10,6 +9,7 @@ import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.GET
 import retrofit2.http.Path
+import java.util.concurrent.CompletableFuture
 
 interface GitHubApiService {
 
@@ -48,7 +48,7 @@ interface GitHubApiService {
     ): Observable<Repo>
 
     @GET("users/{user}/repos?sort=updated&direction=desc")
-    suspend fun getReposWithCoroutines(@Path("user") user: String): Deferred<List<Repo>>
+    fun getReposWithCoroutines(@Path("user") user: String): Deferred<List<Repo>>
 
     @GET("repos/{user}/{repo}")
     fun getDetailsWithCoroutines(
@@ -57,7 +57,7 @@ interface GitHubApiService {
     ): Deferred<Repo>
 
     @GET("users/{user}/repos?sort=updated&direction=desc")
-    suspend fun getReposWithCompletableFuture(@Path("user") user: String): CompletableFuture<List<Repo>>
+    fun getReposWithCompletableFuture(@Path("user") user: String): CompletableFuture<List<Repo>>
 
     @GET("repos/{user}/{repo}")
     fun getDetailsWithCompletableFuture(

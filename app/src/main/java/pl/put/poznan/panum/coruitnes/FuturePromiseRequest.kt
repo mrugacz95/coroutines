@@ -3,7 +3,6 @@ package pl.put.poznan.panum.coruitnes
 import android.os.Handler
 import android.os.Looper
 import androidx.annotation.NonNull
-import java9.util.concurrent.CompletableFuture
 import java.util.concurrent.*
 
 val cores = Runtime.getRuntime().availableProcessors()
