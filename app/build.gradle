@@ -46,4 +46,5 @@ dependencies {
 
     // RxKotlin
     implementation 'io.reactivex.rxjava2:rxkotlin:2.3.0'
+    implementation 'io.reactivex.rxjava2:rxandroid:2.1.1'
 }

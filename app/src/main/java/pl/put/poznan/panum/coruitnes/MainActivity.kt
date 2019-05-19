@@ -4,6 +4,9 @@ import android.os.Bundle
 import android.os.NetworkOnMainThreadException
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import io.reactivex.Observable
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_main.*
 import retrofit2.Call
 import retrofit2.Callback
@@ -83,6 +86,29 @@ class MainActivity : AppCompatActivity() {
                 .thenAcceptAsync { repo ->
                     displayDetails(repo?.get())
                 }
+
+        }
+        bt_rx.setOnClickListener {
+            val repositories = Observable.just(user)
+                .map { user -> requestRepos(user) }
+                .subscribeOn(Schedulers.io())
+            repositories
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe { repos ->
+                    displayRepos(repos)
+                }
+            repositories
+                .map { repos ->
+                    val repoName = repos[0].name
+                    requestDetails(user, repoName)
+                }
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(
+                    { repo ->
+                        displayDetails(repo)
+                    },
+                    { e -> Toast.makeText(this@MainActivity, e.message, Toast.LENGTH_LONG).show() }
+                )
 
         }
     }

@@ -9,4 +9,5 @@
     <string name="promise">Promise</string>
     <string name="clear">Clear</string>
     <string name="details">%s, %s, %s</string>
+    <string name="reactive">Reactive</string>
 </resources>
