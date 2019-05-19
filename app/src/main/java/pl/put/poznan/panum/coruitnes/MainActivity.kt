@@ -7,11 +7,9 @@ import androidx.appcompat.app.AppCompatActivity
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
+import java9.util.function.Consumer
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -23,7 +21,7 @@ class MainActivity : AppCompatActivity() {
     private val job = Job()
     private val uiScope = CoroutineScope(Dispatchers.Main + job)
     private val ioScope = CoroutineScope(Dispatchers.IO + job)
-    private val gitHubApiServe by lazy {
+    private val gitHubApiServce by lazy {
         GitHubApiService.create()
     }
 
@@ -66,33 +64,39 @@ class MainActivity : AppCompatActivity() {
                 }.execute()
             }.execute()
         }
-        bt_retrofit.setOnClickListener {
-            retrofitRequest()
-        }
         bt_future.setOnClickListener {
-            val repos = futureRequestRepos(user).get()
-            displayRepos(repos)
-            val repoName = repos?.get(0)?.name ?: return@setOnClickListener
-            val topics = futureRequestDetails(user, repoName)
-            displayDetails(topics.get())
+            executor.submit {
+                val repos = futureRequestRepos(user).get()
+                mainThreadExecutor.execute {
+                    displayRepos(repos)
+                }
+                val repoName = repos?.get(0)?.name ?: return@submit
+                val topics = futureRequestDetails(user, repoName).get()
+                mainThreadExecutor.execute {
+                    displayDetails(topics)
+                }
+            }
         }
         bt_promise.setOnClickListener {
             val repositories = promiseRequestRepos(user)
-            repositories.thenAcceptAsync { repos ->
-                displayRepos(repos)
-            }
+                .exceptionallyAsync {
+                    null
+                }
+            repositories
+                .thenAcceptAsync(
+                    Consumer { t -> displayRepos(t) },
+                    mainThreadExecutor
+                )
             repositories
                 .thenApply { repos ->
                     repos?.get(0)?.name ?: throw NullPointerException()
                 }
                 .thenApply { repoName -> promiseRequestDetails(user, repoName) }
-                .exceptionallyAsync { e ->
-                    Toast.makeText(this, e.message, Toast.LENGTH_LONG).show()
-                    null
-                }
-                .thenAcceptAsync { repo ->
-                    displayDetails(repo?.get())
-                }
+                .thenAcceptAsync(
+                    Consumer { repo -> displayDetails(repo?.get()) },
+                    mainThreadExecutor
+                )
+
 
         }
         bt_rx.setOnClickListener {
@@ -122,8 +126,57 @@ class MainActivity : AppCompatActivity() {
 
         }
         bt_coroutines.setOnClickListener {
-            coroutinesRequest(user)
+            ioScope.launch {
+                val repos = requestRepos(user)
+                uiScope.launch {
+                    displayRepos(repos)
+                }
+                val repoName = repos?.get(0)?.name ?: return@launch
+                val details = requestDetails(user, repoName)
+                uiScope.launch {
+                    displayDetails(details)
+                }
+            }
         }
+        bt_retrofit.setOnClickListener {
+            gitHubApiServce.getRepos(user).enqueue(object : Callback<List<Repo>> {
+                override fun onFailure(call: Call<List<Repo>>, t: Throwable) {
+                    tv_repos.text = t.message
+                }
+
+                override fun onResponse(call: Call<List<Repo>>, response: Response<List<Repo>>) {
+                    if (!response.isSuccessful) {
+                        tv_repos.text = response.errorBody().toString()
+                        return
+                    }
+                    val repos = response.body() ?: return
+                    displayRepos(repos)
+                    val repoName = repos[0].name
+                    gitHubApiServce.getDetails(user, repoName).enqueue(object : Callback<Repo> {
+                        override fun onFailure(call: Call<Repo>, t: Throwable) {
+                            tv_repo_details.text = t.message
+                        }
+
+                        override fun onResponse(call: Call<Repo>, response: Response<Repo>) {
+                            if (!response.isSuccessful) {
+                                tv_repo_details.text = response.errorBody().toString()
+                                return
+                            }
+                            displayDetails(response.body())
+                        }
+
+                    });
+
+                }
+
+            })
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        uiScope.coroutineContext.cancelChildren()
+        ioScope.coroutineContext.cancelChildren()
     }
 
     private fun displayRepos(repos: List<Repo>?) {
@@ -132,36 +185,5 @@ class MainActivity : AppCompatActivity() {
 
     private fun displayDetails(repo: Repo?) {
         tv_repo_details.text = getString(R.string.details, repo?.name, repo?.description, repo?.language)
-    }
-
-    private fun retrofitRequest() {
-        gitHubApiServe.getRepos(user).enqueue(object : Callback<List<Repo>> {
-            override fun onFailure(call: Call<List<Repo>>, t: Throwable) {
-                tv_repos.text = t.message
-            }
-
-            override fun onResponse(call: Call<List<Repo>>, response: Response<List<Repo>>) {
-                if (response.isSuccessful) {
-                    displayRepos(response.body())
-                } else {
-                    tv_repos.text = response.errorBody().toString()
-                }
-            }
-
-        })
-    }
-
-    private fun coroutinesRequest(user: String) {
-        ioScope.launch {
-            val repos = requestRepos(user)
-            uiScope.launch {
-                displayRepos(repos)
-            }
-            val repoName = repos?.get(0)?.name ?: return@launch
-            val details = requestDetails(user, repoName)
-            uiScope.launch {
-                displayDetails(details)
-            }
-        }
     }
 }

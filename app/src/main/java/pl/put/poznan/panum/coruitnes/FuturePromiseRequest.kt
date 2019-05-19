@@ -1,13 +1,23 @@
 package pl.put.poznan.panum.coruitnes
 
+import android.os.Handler
+import android.os.Looper
+import androidx.annotation.NonNull
 import java9.util.concurrent.CompletableFuture
-import java.util.concurrent.Callable
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
-import java.util.concurrent.Future
+import java.util.concurrent.*
 
 val cores = Runtime.getRuntime().availableProcessors()
 val executor: ExecutorService = Executors.newFixedThreadPool(cores + 1)
+
+class MainThreadExecutor : Executor {
+    private val mainThreadHandler = Handler(Looper.getMainLooper())
+
+    override fun execute(@NonNull command: Runnable) {
+        mainThreadHandler.post(command)
+    }
+}
+
+val mainThreadExecutor = MainThreadExecutor()
 
 fun futureRequestRepos(user: String): Future<List<Repo>?> {
     return executor.submit(Callable { requestRepos(user) })

@@ -2,6 +2,7 @@ package pl.put.poznan.panum.coruitnes
 
 import com.jakewharton.retrofit2.adapter.kotlin.coroutines.CoroutineCallAdapterFactory
 import io.reactivex.Observable
+import java9.util.concurrent.CompletableFuture
 import kotlinx.coroutines.Deferred
 import retrofit2.Call
 import retrofit2.Retrofit
@@ -28,7 +29,7 @@ interface GitHubApiService {
         }
     }
 
-    @GET("users/{user}/repos")
+    @GET("users/{user}/repos?sort=updated&direction=desc")
     fun getRepos(@Path("user") user: String): Call<List<Repo>>
 
     @GET("repos/{user}/{repo}")
@@ -37,7 +38,7 @@ interface GitHubApiService {
         @Path("repo") repo: String
     ): Call<Repo>
 
-    @GET("users/{user}/repos")
+    @GET("users/{user}/repos?sort=updated&direction=desc")
     fun getReposRx(@Path("user") user: String): Observable<List<Repo>>
 
     @GET("repos/{user}/{repo}")
@@ -46,7 +47,7 @@ interface GitHubApiService {
         @Path("repo") repo: String
     ): Observable<Repo>
 
-    @GET("users/{user}/repos")
+    @GET("users/{user}/repos?sort=updated&direction=desc")
     suspend fun getReposWithCoroutines(@Path("user") user: String): Deferred<List<Repo>>
 
     @GET("repos/{user}/{repo}")
@@ -54,4 +55,13 @@ interface GitHubApiService {
         @Path("user") user: String,
         @Path("repo") repo: String
     ): Deferred<Repo>
+
+    @GET("users/{user}/repos?sort=updated&direction=desc")
+    suspend fun getReposWithCompletableFuture(@Path("user") user: String): CompletableFuture<List<Repo>>
+
+    @GET("repos/{user}/{repo}")
+    fun getDetailsWithCompletableFuture(
+        @Path("user") user: String,
+        @Path("repo") repo: String
+    ): CompletableFuture<Repo>
 }
