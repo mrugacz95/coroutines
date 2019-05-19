@@ -8,14 +8,21 @@ import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import java.lang.Runnable
 
 class MainActivity : AppCompatActivity() {
 
     val user = "mrugacz95"
-
+    private val job = Job()
+    private val uiScope = CoroutineScope(Dispatchers.Main + job)
+    private val ioScope = CoroutineScope(Dispatchers.IO + job)
     private val gitHubApiServe by lazy {
         GitHubApiService.create()
     }
@@ -111,6 +118,9 @@ class MainActivity : AppCompatActivity() {
                 )
 
         }
+        bt_coroutines.setOnClickListener {
+            coroutinesRequest(user)
+        }
     }
 
     private fun displayRepos(repos: List<Repo>?) {
@@ -136,5 +146,19 @@ class MainActivity : AppCompatActivity() {
             }
 
         })
+    }
+
+    private fun coroutinesRequest(user: String) {
+        ioScope.launch {
+            val repos = requestRepos(user)
+            uiScope.launch {
+                displayRepos(repos)
+            }
+            val repoName = repos?.get(0)?.name ?: return@launch
+            val details = requestDetails(user, repoName)
+            uiScope.launch {
+                displayDetails(details)
+            }
+        }
     }
 }
