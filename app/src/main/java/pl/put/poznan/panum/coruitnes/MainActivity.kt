@@ -119,7 +119,6 @@ class MainActivity : AppCompatActivity() {
                     },
                     { e -> Toast.makeText(this@MainActivity, e.message, Toast.LENGTH_LONG).show() }
                 )
-
         }
         bt_coroutines.setOnClickListener {
             ioScope.launch {
